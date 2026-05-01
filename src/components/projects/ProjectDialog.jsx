@@ -7,6 +7,8 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
+  DialogClose,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -96,6 +98,11 @@ export default function ProjectDialog({ open, onOpenChange, project, user, onSav
           <
 // @ts-ignore
           DialogTitle>{isEdit ? "Edit Project" : "New Project"}</DialogTitle>
+          <
+// @ts-ignore
+          DialogDescription>
+            {isEdit ? "Update your project details and settings." : "Create a new project to get started with your work."}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
@@ -235,7 +242,11 @@ export default function ProjectDialog({ open, onOpenChange, project, user, onSav
         DialogFooter>
           <
 // @ts-ignore
-          Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+          DialogClose asChild>
+            <
+// @ts-ignore
+            Button variant="outline">Cancel</Button>
+          </DialogClose>
           <
 // @ts-ignore
           Button onClick={handleSave} disabled={saving || !form.name.trim()}>

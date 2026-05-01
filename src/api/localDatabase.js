@@ -236,7 +236,7 @@ const auth = {
 const users = {
   inviteUser: async (email, role) => {
     // Mock implementation - in real app this would send invitation
-    console.log('Inviting user:', email, 'with role:', role);
+    // console.log('Inviting user:', email, 'with role:', role);
     return Promise.resolve({ email, role, status: 'invited' });
   }
 };

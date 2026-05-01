@@ -30,8 +30,8 @@
       "project_id": "1",
       "status": "in_progress",
       "priority": "high",
-      "assigned_to": "john@example.com",
-      "assigned_to_name": "John Doe",
+      "assigned_to": "siya@example.com",
+      "assigned_to_name": "Siya Singh",
       "due_date": "2024-02-15",
       "created_date": "2024-01-16T10:00:00Z"
     },
@@ -42,8 +42,8 @@
       "project_id": "2",
       "status": "done",
       "priority": "medium",
-      "assigned_to": "jane@example.com",
-      "assigned_to_name": "Jane Smith",
+      "assigned_to": "mayank@example.com",
+      "assigned_to_name": "Mayank Singh",
       "due_date": "2024-01-25",
       "created_date": "2024-01-21T14:30:00Z"
     },
@@ -63,15 +63,15 @@
   "team_members": [
     {
       "id": "1",
-      "user_email": "john@example.com",
-      "user_name": "John Doe",
+      "user_email": "siya@example.com",
+      "user_name": "Siya Singh",
       "role": "developer",
       "joined_date": "2024-01-01T00:00:00Z"
     },
     {
       "id": "2",
-      "user_email": "jane@example.com",
-      "user_name": "Jane Smith",
+      "user_email": "mayank@example.com",
+      "user_name": "Mayank Singh",
       "role": "designer",
       "joined_date": "2024-01-01T00:00:00Z"
     },

@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import { localDatabase } from "@/api/localDatabase.js";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog.jsx";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogFooter, 
+  DialogDescription 
+} from "@/components/ui/dialog.jsx";
 import { Button } from "@/components/ui/button.jsx";
 import { Input } from "@/components/ui/input.jsx";
 import { Label } from "@/components/ui/label.jsx";
@@ -64,6 +71,9 @@ export default function MemberDialog({ open, onOpenChange, projectId, existingMe
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Add Team Member</DialogTitle>
+          <DialogDescription>
+            Invite a new member to join your team and collaborate on projects.
+          </DialogDescription>
         </DialogHeader>
         
         <div className="space-y-4 py-2">

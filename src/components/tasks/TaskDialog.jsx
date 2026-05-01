@@ -9,6 +9,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog.jsx";
 import { Button } from "@/components/ui/button.jsx";
 import { Input } from "@/components/ui/input.jsx";
@@ -120,6 +121,11 @@ export default function TaskDialog({
           <
 // @ts-ignore
           DialogTitle>{isEdit ? "Edit Task" : "New Task"}</DialogTitle>
+          <
+// @ts-ignore
+          DialogDescription>
+            {isEdit ? "Update your task details and progress." : "Create a new task and assign it to team members."}
+          </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
