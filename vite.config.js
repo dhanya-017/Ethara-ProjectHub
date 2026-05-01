@@ -16,5 +16,18 @@ export default defineConfig({
       visualEditAgent: true
     }),
     react(),
-  ]
+  ],
+  server: {
+    host: true,
+    port: 5173
+  },
+  preview: {
+    host: true,
+    port: 5173,
+    allowedHosts: [
+      'ethara-projecthub-production.up.railway.app',
+      'localhost',
+      '127.0.0.1'
+    ]
+  }
 });
