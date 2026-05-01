@@ -1,0 +1,10 @@
+{
+  "name": "ProjectHub - Project Management",
+  "short_name": "ProjectHub",
+  "description": "A modern project management application",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#6366f1",
+  "orientation": "portrait-primary"
+}
