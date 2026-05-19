@@ -1,9 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { localDatabase } from '@/api/localDatabase.js';
 
 const AuthContext = createContext(null);
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001/api';
+
+// Fallback to local database if API is unavailable
+const USE_LOCAL_FALLBACK = true;
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
@@ -15,36 +19,39 @@ export const AuthProvider = ({ children }) => {
 
   const checkUserAuth = async () => {
     try {
-      setIsLoadingAuth(true);
       const token = localStorage.getItem('authToken');
+      const storedUser = localStorage.getItem('authUser');
       
-      if (token) {
-        const response = await fetch(`${API_BASE_URL}/auth/me`, {
-          headers: {
-            'Authorization': `Bearer ${token}`
-          }
-        });
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+        setIsAuthenticated(true);
+        
+        // Try to verify with API if token exists
+        if (token) {
+          try {
+            const response = await fetch(`${API_BASE_URL}/auth/me`, {
+              headers: {
+                'Authorization': `Bearer ${token}`
+              }
+            });
 
-        if (response.ok) {
-          const data = await response.json();
-          setUser(data.data.user);
-          setIsAuthenticated(true);
-          setAuthError(null);
-        } else {
-          localStorage.removeItem('authToken');
-          setUser(null);
-          setIsAuthenticated(false);
+            if (response.ok) {
+              const data = await response.json();
+              setUser(data.data.user);
+              setIsAuthenticated(true);
+            } else {
+              // Token invalid, but keep using stored user data for fallback
+              console.log('API token invalid, using stored user data');
+            }
+          } catch (error) {
+            // API unavailable, continue with stored user data
+            console.log('API unavailable, using stored user data');
+          }
         }
-      } else {
-        setUser(null);
-        setIsAuthenticated(false);
       }
     } catch (error) {
-      setIsAuthenticated(false);
-      setUser(null);
-      setAuthError({ type: 'auth_required', message: error.message });
+      console.error('Auth check error:', error);
     } finally {
-      setIsLoadingAuth(false);
       setAuthChecked(true);
     }
   };
@@ -57,38 +64,69 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingAuth(true);
       
-      const response = await fetch(`${API_BASE_URL}/auth/login`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ email, password, expectedRole })
-      });
+      // Try API first
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ email, password, expectedRole })
+        });
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        // If expectedRole is provided, validate that user role matches
-        if (expectedRole && data.data.user.role !== expectedRole) {
-          const error = { type: 'role_mismatch', message: `Invalid credentials for ${expectedRole} access` };
+        const data = await response.json();
+        
+        if (response.ok) {
+          // If expectedRole is provided, validate that user role matches
+          if (expectedRole && data.data.user.role !== expectedRole) {
+            const error = { type: 'role_mismatch', message: `Invalid credentials for ${expectedRole} access` };
+            setAuthError(error);
+            return { success: false, error };
+          }
+          
+          setUser(data.data.user);
+          setIsAuthenticated(true);
+          setAuthError(null);
+          localStorage.setItem('authToken', data.data.token);
+          localStorage.setItem('authUser', JSON.stringify(data.data.user));
+          
+          // Navigate to dashboard after successful login
+          navigate('/');
+          
+          return { success: true, user: data.data.user };
+        } else {
+          const error = { type: 'invalid_credentials', message: data.error || 'Invalid email or password' };
           setAuthError(error);
           return { success: false, error };
         }
-        
-        setUser(data.data.user);
-        setIsAuthenticated(true);
-        setAuthError(null);
-        localStorage.setItem('authToken', data.data.token);
-        localStorage.setItem('authUser', JSON.stringify(data.data.user));
-        
-        // Navigate to dashboard after successful login
-        navigate('/');
-        
-        return { success: true, user: data.data.user };
-      } else {
-        const error = { type: 'invalid_credentials', message: data.error || 'Invalid email or password' };
-        setAuthError(error);
-        return { success: false, error };
+      } catch (apiError) {
+        // API failed, try local database fallback
+        if (USE_LOCAL_FALLBACK) {
+          console.log('API unavailable, using local database fallback');
+          const user = localDatabase.entities.User.authenticate(email, password);
+          
+          if (user) {
+            if (expectedRole && user.role !== expectedRole) {
+              const error = { type: 'role_mismatch', message: `Invalid credentials for ${expectedRole} access` };
+              setAuthError(error);
+              return { success: false, error };
+            }
+            
+            setUser(user);
+            setIsAuthenticated(true);
+            setAuthError(null);
+            localStorage.setItem('authUser', JSON.stringify(user));
+            navigate('/');
+            
+            return { success: true, user };
+          } else {
+            const error = { type: 'invalid_credentials', message: 'Invalid email or password' };
+            setAuthError(error);
+            return { success: false, error };
+          }
+        } else {
+          throw apiError;
+        }
       }
     } catch (error) {
       const authError = { type: 'auth_error', message: error.message };
@@ -103,32 +141,64 @@ export const AuthProvider = ({ children }) => {
     try {
       setIsLoadingAuth(true);
       
-      const response = await fetch(`${API_BASE_URL}/auth/signup`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(userData)
-      });
+      // Try API first
+      try {
+        const response = await fetch(`${API_BASE_URL}/auth/signup`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(userData)
+        });
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        // Auto-login after signup
-        setUser(data.data.user);
-        setIsAuthenticated(true);
-        setAuthError(null);
-        localStorage.setItem('authToken', data.data.token);
-        localStorage.setItem('authUser', JSON.stringify(data.data.user));
+        const data = await response.json();
         
-        // Navigate to dashboard after successful signup
-        navigate('/');
-        
-        return { success: true, user: data.data.user };
-      } else {
-        const error = { type: 'signup_error', message: data.error || 'Signup failed' };
-        setAuthError(error);
-        return { success: false, error };
+        if (response.ok) {
+          // Auto-login after signup
+          setUser(data.data.user);
+          setIsAuthenticated(true);
+          setAuthError(null);
+          localStorage.setItem('authToken', data.data.token);
+          localStorage.setItem('authUser', JSON.stringify(data.data.user));
+          
+          // Navigate to dashboard after successful signup
+          navigate('/');
+          
+          return { success: true, user: data.data.user };
+        } else {
+          const error = { type: 'signup_error', message: data.error || 'Signup failed' };
+          setAuthError(error);
+          return { success: false, error };
+        }
+      } catch (apiError) {
+        // API failed, try local database fallback
+        if (USE_LOCAL_FALLBACK) {
+          console.log('API unavailable, using local database fallback for signup');
+          
+          try {
+            const user = localDatabase.entities.User.create({
+              username: userData.username,
+              email: userData.email,
+              password: userData.password,
+              full_name: userData.full_name,
+              role: userData.role
+            });
+            
+            setUser(user);
+            setIsAuthenticated(true);
+            setAuthError(null);
+            localStorage.setItem('authUser', JSON.stringify(user));
+            navigate('/');
+            
+            return { success: true, user };
+          } catch (localError) {
+            const error = { type: 'signup_error', message: localError.message || 'Signup failed' };
+            setAuthError(error);
+            return { success: false, error };
+          }
+        } else {
+          throw apiError;
+        }
       }
     } catch (error) {
       const authError = { type: 'signup_error', message: error.message };
