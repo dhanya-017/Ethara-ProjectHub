@@ -38,7 +38,7 @@ export default function Signup() {
     switch (score) {
       case 0:
       case 1:
-        message = "Weak password";
+        message = "Weak password (min 8 chars)";
         break;
       case 2:
       case 3:
@@ -69,7 +69,7 @@ export default function Signup() {
     setError("");
 
     // Validation
-    if (!formData.username.trim() || !formData.email.trim() || !formData.password.trim()) {
+    if (!formData.username.trim() || !formData.email.trim() || !formData.password.trim() || !formData.fullName.trim()) {
       setError("Please fill in all required fields");
       return;
     }
@@ -79,8 +79,8 @@ export default function Signup() {
       return;
     }
 
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters long");
+    if (formData.password.length < 8) {
+      setError("Password must be at least 8 characters long");
       return;
     }
 
@@ -96,7 +96,7 @@ export default function Signup() {
         username: formData.username,
         email: formData.email,
         password: formData.password,
-        full_name: formData.fullName || formData.username,
+        full_name: formData.fullName,
         role: formData.role
       });
 
@@ -164,7 +164,7 @@ export default function Signup() {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
+              <Label htmlFor="fullName">Full Name *</Label>
               <Input
                 id="fullName"
                 name="fullName"
@@ -172,6 +172,7 @@ export default function Signup() {
                 placeholder="Enter your full name"
                 value={formData.fullName}
                 onChange={handleInputChange}
+                required
               />
             </div>
             
@@ -194,6 +195,23 @@ export default function Signup() {
             
             <div className="space-y-2">
               <Label htmlFor="password">Password *</Label>
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p>Password must contain:</p>
+                <ul className="list-disc list-inside space-y-1 ml-2">
+                  <li className={formData.password.length >= 8 ? "text-green-600" : ""}>
+                    At least 8 characters
+                  </li>
+                  <li className={/[a-z]/.test(formData.password) && /[A-Z]/.test(formData.password) ? "text-green-600" : ""}>
+                    Both uppercase and lowercase letters
+                  </li>
+                  <li className={/\d/.test(formData.password) ? "text-green-600" : ""}>
+                    At least one number
+                  </li>
+                  <li className={/[!@#$%^&*(),.?":{}|<>]/.test(formData.password) ? "text-green-600" : ""}>
+                    At least one special character (!@#$%^&*() etc.)
+                  </li>
+                </ul>
+              </div>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                 <Input
@@ -317,7 +335,7 @@ export default function Signup() {
             <Button 
               type="submit" 
               className="w-full" 
-              disabled={loading || !formData.username.trim() || !formData.email.trim() || !formData.password.trim()}
+              disabled={loading || !formData.username.trim() || !formData.email.trim() || !formData.password.trim() || !formData.fullName.trim()}
             >
               {loading ? (
                 "Creating account..."
