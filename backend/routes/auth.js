@@ -60,7 +60,7 @@ router.post('/signup', async (req, res) => {
 // @access  Public
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, expectedRole } = req.body;
 
     // Check if user exists
     const user = await User.findOne({ email }).select('+password');
@@ -85,6 +85,14 @@ router.post('/login', async (req, res) => {
       return res.status(401).json({
         success: false,
         error: 'Invalid email or password'
+      });
+    }
+
+    // Check role if expectedRole is provided
+    if (expectedRole && user.role !== expectedRole) {
+      return res.status(403).json({
+        success: false,
+        error: `This account has ${user.role} role. Please select the correct account type to login.`
       });
     }
 
